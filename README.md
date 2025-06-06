@@ -1,4 +1,5 @@
-# Auth Service
+# Authentication Service
+Authentication- og brugerhåndteringsservice. Opretter brugere ud fra forhåndsgodkendte e-mails og sender bekræftelsesmail. 
 
 ## Formål
 
