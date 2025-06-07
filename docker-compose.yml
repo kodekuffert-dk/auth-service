@@ -1,0 +1,29 @@
+services:
+  auth-service:
+    image: ${DOCKER_REGISTRY-}authservice
+    build:
+      context: auth-service
+      dockerfile: Dockerfile
+    depends_on:
+      - auth-db
+    networks:
+      - auth-network
+
+  auth-db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: authdb
+      POSTGRES_USER: authuser
+      POSTGRES_PASSWORD: authpassword
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - auth-network
+
+volumes:
+  postgres_data:
+
+networks:
+  auth-network:

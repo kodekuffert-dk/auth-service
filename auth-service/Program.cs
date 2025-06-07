@@ -51,13 +51,20 @@ builder.Services.AddSingleton<auth_service.Services.AuthService>();
 builder.Services.AddScoped<IDbConnection>(sp =>
 {
     var configuration = sp.GetRequiredService<IConfiguration>();
-    var connectionString = configuration.GetConnectionString("DefaultConnection") ?? "Host=localhost;Database=authdb;Username=postgres;Password=postgres";
+    var connectionString = configuration.GetConnectionString("DefaultConnection") ?? "Host=auth-db;Port=5432;Database=authdb;Username=authuser;Password=authpassword";
     return new NpgsqlConnection(connectionString);
 });
 builder.Services.AddScoped<IWhitelistRepository, WhitelistRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 
 var app = builder.Build();
+
+// Initialiser database (opret users-tabel hvis den ikke findes)
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<IDbConnection>();
+    auth_service.Data.DatabaseInitializer.Initialize(db);
+}
 
 if (app.Environment.IsDevelopment())
 {
