@@ -12,6 +12,7 @@ public interface IUserRepository
     Task<User?> GetByIdAsync(int id);
     Task<int> CreateAsync(User user);
     Task UpdateAsync(User user);
+    Task<User?> GetByEmailConfirmationTokenAsync(string token);
 }
 
 public class UserRepository : IUserRepository
@@ -49,5 +50,12 @@ public class UserRepository : IUserRepository
     {
         var sql = @"UPDATE users SET passwordhash = @PasswordHash, role = @Role, isemailconfirmed = @IsEmailConfirmed, emailconfirmationtoken = @EmailConfirmationToken WHERE id = @Id";
         await _db.ExecuteAsync(sql, user);
+    }
+
+    public async Task<User?> GetByEmailConfirmationTokenAsync(string token)
+    {
+        var sql = "SELECT * FROM users WHERE emailconfirmationtoken = @token";
+        var result = await _db.QueryFirstOrDefaultAsync<User>(sql, new { token });
+        return result;
     }
 }

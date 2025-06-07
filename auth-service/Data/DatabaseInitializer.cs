@@ -24,14 +24,6 @@ public static class DatabaseInitializer
             createdat TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
         );");
 
-        db.Execute(@"CREATE TABLE IF NOT EXISTS tokens (
-            id SERIAL PRIMARY KEY,
-            token VARCHAR(255) NOT NULL UNIQUE,
-            user_id INT NOT NULL,
-            createdat TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-        );");
-
         // Seed the admin user if it does not exist
         var adminEmail = "lany@ucn.dk";
         var existingAdmin = db.QuerySingleOrDefault(
