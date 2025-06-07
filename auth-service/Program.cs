@@ -1,6 +1,9 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using System.Data;
+using Npgsql;
+using auth_service.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -43,6 +46,16 @@ builder.Services.AddAuthorization(options =>
 
 // Dependency injection for AuthService
 builder.Services.AddSingleton<auth_service.Services.AuthService>();
+
+// Dependency injection for repositories and database connection
+builder.Services.AddScoped<IDbConnection>(sp =>
+{
+    var configuration = sp.GetRequiredService<IConfiguration>();
+    var connectionString = configuration.GetConnectionString("DefaultConnection") ?? "Host=localhost;Database=authdb;Username=postgres;Password=postgres";
+    return new NpgsqlConnection(connectionString);
+});
+builder.Services.AddScoped<IWhitelistRepository, WhitelistRepository>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
 
 var app = builder.Build();
 

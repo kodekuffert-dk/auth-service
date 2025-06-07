@@ -1,11 +1,14 @@
+using auth_service.Data;
 using Microsoft.AspNetCore.Mvc;
 
 namespace auth_service.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class UsersController : ControllerBase
+public class UsersController(IUserRepository userRepository) : ControllerBase
 {
+    private readonly IUserRepository _userRepository = userRepository;
+
     // POST: api/users/login
     [HttpPost("login")]
     public IActionResult Login([FromBody] object loginDto)

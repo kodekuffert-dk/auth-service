@@ -1,3 +1,4 @@
+using auth_service.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -5,8 +6,10 @@ namespace auth_service.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class WhitelistController : ControllerBase
+public class WhitelistController(IWhitelistRepository whitelistRepository) : ControllerBase
 {
+    private readonly IWhitelistRepository _whitelistRepository = whitelistRepository;
+
     // POST: api/whitelist
     [HttpPost]
     [Authorize(Roles = "Administrator")]
