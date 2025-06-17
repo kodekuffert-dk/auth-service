@@ -7,7 +7,14 @@ public static class DatabaseInitializer
 {
     public static void Initialize(IDbConnection db)
     {
-        // Create the users table if it does not exist
+        // Opret teams-tabel
+        db.Execute(@"CREATE TABLE IF NOT EXISTS teams (
+            id SERIAL PRIMARY KEY,
+            name VARCHAR(100) NOT NULL UNIQUE,
+            createdat TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+        );");
+
+        // Opret users-tabel med nullable team_id
         db.Execute(@"CREATE TABLE IF NOT EXISTS users (
             id SERIAL PRIMARY KEY,
             email VARCHAR(255) NOT NULL UNIQUE,
@@ -15,16 +22,19 @@ public static class DatabaseInitializer
             role VARCHAR(50) NOT NULL,
             isemailconfirmed BOOLEAN NOT NULL DEFAULT FALSE,
             emailconfirmationtoken VARCHAR(255),
-            createdat TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+            createdat TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            team_id INTEGER REFERENCES teams(id)
         );");
 
+        // Opret whitelist-tabel med nullable team_id
         db.Execute(@"CREATE TABLE IF NOT EXISTS whitelist (
             id SERIAL PRIMARY KEY,
             email VARCHAR(255) NOT NULL UNIQUE,
-            createdat TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+            createdat TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            team_id INTEGER REFERENCES teams(id)
         );");
 
-        // Seed the admin user if it does not exist
+        // Seed admin-bruger hvis den ikke findes
         var adminEmail = "lany@ucn.dk";
         var existingAdmin = db.QuerySingleOrDefault(
             "SELECT email FROM users WHERE email = @Email AND role = 'Administrator'",
@@ -38,7 +48,7 @@ public static class DatabaseInitializer
                          new
                          {
                              Email = adminEmail,
-                             PasswordHash = BCrypt.Net.BCrypt.HashPassword("admin123") // Use a secure hash for the password
+                             PasswordHash = BCrypt.Net.BCrypt.HashPassword("admin123")
                          });
         }
     }
