@@ -2,6 +2,10 @@ using auth_service.Data;
 using auth_service.Models;
 using auth_service.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 
 namespace auth_service.Controllers;
 
@@ -29,8 +33,30 @@ public class UsersController(IUserRepository userRepository, AuthService authSer
         if (!user.IsEmailConfirmed)
             return Unauthorized("E-mail er ikke bekræftet.");
 
-        // Her kan evt. JWT-token genereres og returneres
-        return Ok(new { message = "Login succesfuld", user.Id, user.Email, user.Role });
+        // JWT-token genereres og returneres
+        var config = HttpContext.RequestServices.GetService(typeof(IConfiguration)) as IConfiguration;
+        // Fallback key skal være mindst 32 tegn (256 bits)
+        var jwtKey = (config != null && config["Jwt:Key"] != null) ? config["Jwt:Key"] : "super_secret_dev_key_12345_super_secret_dev_key_67890";
+        var jwtIssuer = (config != null && config["Jwt:Issuer"] != null) ? config["Jwt:Issuer"] : "auth_service";
+        var jwtAudience = (config != null && config["Jwt:Audience"] != null) ? config["Jwt:Audience"] : "auth_service_users";
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
+        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+        var claims = new[]
+        {
+            new Claim(JwtRegisteredClaimNames.Sub, user.Email),
+            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+            new Claim(ClaimTypes.Role, user.Role)
+        };
+        var token = new JwtSecurityToken(
+            issuer: jwtIssuer,
+            audience: jwtAudience,
+            claims: claims,
+            expires: DateTime.UtcNow.AddHours(6),
+            signingCredentials: creds
+        );
+        var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
+        return Ok(new { message = "Login succesfuld", token = tokenString, user.Id, user.Email, user.Role });
     }
 
     // POST: api/users/register
