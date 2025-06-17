@@ -4,6 +4,7 @@ using System.Text;
 using System.Data;
 using Npgsql;
 using auth_service.Data;
+using auth_service.Data.Implementations;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,7 +14,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 // JWT authentication
-var jwtKey = builder.Configuration["Jwt:Key"] ?? "super_secret_dev_key_12345";
+var jwtKey = builder.Configuration["Jwt:Key"] ?? "this_wont_work";
 var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "auth_service";
 var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "auth_service_users";
 var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
@@ -34,6 +35,25 @@ builder.Services.AddAuthentication(options =>
         ValidIssuer = jwtIssuer,
         ValidAudience = jwtAudience,
         IssuerSigningKey = key
+    };
+    // Tilføj logging for authentication events
+    options.Events = new JwtBearerEvents
+    {
+        OnAuthenticationFailed = context =>
+        {
+            Console.WriteLine($"[JWT] Authentication failed: {context.Exception.Message}");
+            return Task.CompletedTask;
+        },
+        OnTokenValidated = context =>
+        {
+            Console.WriteLine($"[JWT] Token validated for: {context.Principal?.Identity?.Name}");
+            return Task.CompletedTask;
+        },
+        OnChallenge = context =>
+        {
+            Console.WriteLine($"[JWT] Challenge triggered: {context.ErrorDescription}");
+            return Task.CompletedTask;
+        }
     };
 });
 

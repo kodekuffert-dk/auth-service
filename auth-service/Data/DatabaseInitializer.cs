@@ -18,7 +18,7 @@ public static class DatabaseInitializer
             createdat TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
         );");
 
-        db.Execute(@"CREATE TABLE IF NOT EXISTS whitelists (
+        db.Execute(@"CREATE TABLE IF NOT EXISTS whitelist (
             id SERIAL PRIMARY KEY,
             email VARCHAR(255) NOT NULL UNIQUE,
             createdat TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
