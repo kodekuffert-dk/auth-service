@@ -1,50 +1,68 @@
 using auth_service.Data;
+using auth_service.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
-namespace auth_service.Controllers;
-
-[ApiController]
-[Route("api/[controller]")]
-[Authorize(Roles = "Administrator")]
-public class WhitelistController(IWhitelistRepository whitelistRepository) : ControllerBase
+namespace auth_service.Controllers
 {
-    private readonly IWhitelistRepository _whitelistRepository = whitelistRepository;
-
-    // POST: api/whitelist
-    [HttpPost]
-    public IActionResult AddStudentNumbers([FromBody] AddStudentNumbersDto dto)
+    [ApiController]
+    [Route("api/[controller]")]
+    [Authorize(Roles = "Administrator")]
+    public class WhitelistController : ControllerBase
     {
-        // TODO: Implementer logik til at tilføje studienumre til whitelist
-        return Ok($"{dto.Emails.Count} emails tilføjet til whitelist");
-    }
+        private readonly IWhitelistRepository _whitelistRepository;
 
-    // GET: api/whitelist
-    [HttpGet]
-    public ActionResult<List<WhitelistEntryStatusDto>> GetWhitelist()
-    {
-        // TODO: Hent whitelist fra database og returner med status
-        var dummyList = new List<WhitelistEntryStatusDto>
+        public WhitelistController(IWhitelistRepository whitelistRepository)
         {
-            new() { Email = "123456", Status = "afventer" },
-            new() { Email = "654321", Status = "aktiv" },
-            new() { Email = "111111", Status = "inaktiv" }
-        };
-        return Ok(dummyList);
-    }
+            _whitelistRepository = whitelistRepository;
+        }
 
-    // DELETE: api/whitelist
-    [HttpDelete]
-    public IActionResult DeleteStudentNumbers([FromBody] DeleteStudentNumbersDto dto)
-    {
-        // TODO: Implementer logik til at slette studienumre fra whitelist
-        return Ok($"{dto.Emails.Count} studienumre slettet fra whitelist");
+        // POST: api/whitelist
+        [HttpPost]
+        public async Task<IActionResult> AddWhitelistEntries([FromBody] AddWhitelistEntriesDto dto)
+        {
+            if (dto.Emails == null || dto.Emails.Count == 0 || string.IsNullOrWhiteSpace(dto.TeamName))
+                return BadRequest("Emails and TeamName are required.");
+
+            var entry = new WhitelistEntry
+            {
+                Emails = dto.Emails,
+                TeamName = dto.TeamName
+            };
+            await _whitelistRepository.AddAsync(entry);
+            return Ok($"{dto.Emails.Count} emails added to whitelist for team '{dto.TeamName}'");
+        }
+
+        // GET: api/whitelist
+        [HttpGet]
+        public ActionResult<List<WhitelistEntryStatusDto>> GetWhitelist()
+        {
+            // TODO: Hent whitelist fra database og returner med status
+            var dummyList = new List<WhitelistEntryStatusDto>
+            {
+                new WhitelistEntryStatusDto { Email = "123456", Status = "afventer" },
+                new WhitelistEntryStatusDto { Email = "654321", Status = "aktiv" },
+                new WhitelistEntryStatusDto { Email = "111111", Status = "inaktiv" }
+            };
+            return Ok(dummyList);
+        }
+
+        // DELETE: api/whitelist
+        [HttpDelete]
+        public IActionResult DeleteStudentNumbers([FromBody] DeleteStudentNumbersDto dto)
+        {
+            // TODO: Implementer logik til at slette studienumre fra whitelist
+            return Ok($"{dto.Emails.Count} studienumre slettet fra whitelist");
+        }
     }
 }
 
-public class AddStudentNumbersDto
+public class AddWhitelistEntriesDto
 {
     public List<string> Emails { get; set; } = new List<string>();
+    public string TeamName { get; set; } = string.Empty;
 }
 
 public class DeleteStudentNumbersDto
