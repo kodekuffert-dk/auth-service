@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using auth_service.Data;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -6,18 +7,16 @@ namespace auth_service.Controllers;
 [Route("[controller]")]
 [ApiController]
 [Authorize]
-public class UserController : ControllerBase
+public class UserController(IUserRepository userRepository, IWhitelistRepository whitelistRepository) : ControllerBase
 {
-    [HttpGet]
+    private readonly IUserRepository _userRepository = userRepository;
+    private readonly IWhitelistRepository _whitelistRepository = whitelistRepository;
+
+    [HttpGet("me")]
     public IActionResult GetUser()
     {
         // TODO: retrieve current user information from a database or authentication service.
-        var user = new
-        {
-            Id = 1,
-            Email = ""
-        };
-        return Ok(user);
+        throw new NotImplementedException();
     }
 
     [HttpPost]
