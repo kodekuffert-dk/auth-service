@@ -4,7 +4,7 @@ using System.Text;
 using System.Data;
 using Npgsql;
 using auth_service.Data;
-using auth_service.Data.Implementations;
+using auth_service.Data.Implementations.Postgres;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -83,7 +83,7 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<IDbConnection>();
-    auth_service.Data.DatabaseInitializer.Initialize(db);
+    DatabaseInitializer.Initialize(db);
 }
 
 if (app.Environment.IsDevelopment())

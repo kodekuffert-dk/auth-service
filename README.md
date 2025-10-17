@@ -5,6 +5,9 @@ Authentication- og brugerhåndteringsservice. Opretter brugere ud fra forhåndsg
 
 ## Teknologi
 
+App: ASP.NET Core 8
+Database: Postgres:15
+
 ## Kom i gang (med Docker)
 
 ## Endpoints

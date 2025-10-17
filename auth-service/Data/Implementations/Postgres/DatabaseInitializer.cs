@@ -1,7 +1,7 @@
 using System.Data;
 using Dapper;
 
-namespace auth_service.Data;
+namespace auth_service.Data.Implementations.Postgres;
 
 public static class DatabaseInitializer
 {
@@ -48,7 +48,7 @@ public static class DatabaseInitializer
                          new
                          {
                              Email = adminEmail,
-                             PasswordHash = BCrypt.Net.BCrypt.HashPassword("admin123")
+                             PasswordHash = BCrypt.Net.BCrypt.HashPassword("admin123") // Default password, skal ændres ved første login
                          });
         }
     }

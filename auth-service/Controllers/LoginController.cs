@@ -10,15 +10,15 @@ using System.Text;
 namespace auth_service.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
-public class UsersController(IUserRepository userRepository, AuthService authService, IWhitelistRepository whitelistRepository) : ControllerBase
+[Route("[controller]")]
+public class LoginController(IUserRepository userRepository, AuthService authService, IWhitelistRepository whitelistRepository) : ControllerBase
 {
     private readonly IUserRepository _userRepository = userRepository;
     private readonly AuthService _authService = authService;
     private readonly IWhitelistRepository _whitelistRepository = whitelistRepository;
 
-    // POST: api/users/login
-    [HttpPost("login")]
+    // POST: login
+    [HttpPost()]
     public async Task<IActionResult> Login([FromBody] LoginDto loginDto)
     {
         if (string.IsNullOrWhiteSpace(loginDto.Email) || string.IsNullOrWhiteSpace(loginDto.Password))

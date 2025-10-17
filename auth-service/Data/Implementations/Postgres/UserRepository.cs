@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 using Dapper;
 
-namespace auth_service.Data.Implementations;
+namespace auth_service.Data.Implementations.Postgres;
 
 public class UserRepository : IUserRepository
 {
