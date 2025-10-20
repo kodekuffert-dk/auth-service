@@ -1,8 +1,8 @@
 using System.Data;
-using auth_service.Models;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using Dapper;
+using auth_service.Data.Models;
 
 namespace auth_service.Data.Implementations.Postgres;
 
@@ -28,12 +28,12 @@ public class UserRepository : IUserRepository
         return result;
     }
 
-    public async Task<int> CreateAsync(User user)
+    public async Task<Guid> CreateAsync(User user)
     {
         var sql = @"INSERT INTO users (email, passwordhash, role, isemailconfirmed, emailconfirmationtoken, createdat)
                     VALUES (@Email, @PasswordHash, @Role, @IsEmailConfirmed, @EmailConfirmationToken, @CreatedAt)
                     RETURNING id;";
-        var id = await _db.ExecuteScalarAsync<int>(sql, user);
+        var id = await _db.ExecuteScalarAsync<Guid>(sql, user);
         return id;
     }
 

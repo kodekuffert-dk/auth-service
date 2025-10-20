@@ -1,5 +1,4 @@
 using auth_service.Data;
-using auth_service.Models;
 using auth_service.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
@@ -57,5 +56,11 @@ public class LoginController(IUserRepository userRepository, AuthService authSer
         );
         var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
         return Ok(new { message = "Login succesfuld", token = tokenString, user.Id, user.Email, user.Role });
+    }
+
+    public class LoginDto
+    {
+        public string Email { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
     }
 }

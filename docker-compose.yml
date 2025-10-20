@@ -1,4 +1,38 @@
 services:
+  auth-db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: authdb
+      POSTGRES_USER: authuser
+      POSTGRES_PASSWORD: authpassword
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$POSTGRES_USER\" -d \"$POSTGRES_DB\""]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+    volumes:
+      - auth_data:/var/lib/postgresql/data
+    networks:
+      - auth-network
+
+  migrator:
+    build: 
+      context: DatabaseMigrator
+      dockerfile: Dockerfile
+    depends_on:
+      auth-db:
+        condition: service_healthy
+    environment:
+      DB_CONNECTION: Host=db;Port=5432;Database=authdb;Username=authuser;Password=authpassword
+      RESET_SCHEMA: "true" # only in dev when you want to "wipe"
+    volumes:
+      - ./db/migrations:/app/sql:ro
+    networks:
+      - auth-network
+    restart: "no"  # run once and stop
+
   auth-service:
     image: ${DOCKER_REGISTRY-}authservice
     build:
@@ -6,19 +40,6 @@ services:
       dockerfile: Dockerfile
     depends_on:
       - auth-db
-    networks:
-      - auth-network
-
-  auth-db:
-    image: postgres:15
-    environment:
-      POSTGRES_DB: authdb
-      POSTGRES_USER: authuser
-      POSTGRES_PASSWORD: authpassword
-    ports:
-      - "5432:5432"
-    volumes:
-      - auth_data:/var/lib/postgresql/data
     networks:
       - auth-network
 

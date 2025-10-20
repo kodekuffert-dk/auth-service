@@ -1,8 +1,8 @@
-namespace auth_service.Models;
+namespace auth_service.Data.Models;
 
 public class User
 {
-    public int Id { get; set; }
+    public Guid Id { get; set; }
     public string Email { get; set; } = string.Empty;
     public string PasswordHash { get; set; } = string.Empty;
     public string Role { get; set; } = "Student"; // or "Administrator"

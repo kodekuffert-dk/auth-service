@@ -74,17 +74,17 @@ builder.Services.AddScoped<IDbConnection>(sp =>
     var connectionString = configuration.GetConnectionString("DefaultConnection") ?? "Host=auth-db;Port=5432;Database=authdb;Username=authuser;Password=authpassword";
     return new NpgsqlConnection(connectionString);
 });
-builder.Services.AddScoped<IWhitelistRepository, WhitelistRepository>();
+builder.Services.AddScoped<ITeamRepository, TeamRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 
 var app = builder.Build();
 
-// Initialiser database (opret users-tabel hvis den ikke findes)
-using (var scope = app.Services.CreateScope())
-{
-    var db = scope.ServiceProvider.GetRequiredService<IDbConnection>();
-    DatabaseInitializer.Initialize(db);
-}
+// Initialiser database
+//using (var scope = app.Services.CreateScope())
+//{
+//    var db = scope.ServiceProvider.GetRequiredService<IDbConnection>();
+//    DatabaseInitializer.Initialize(db);
+//}
 
 if (app.Environment.IsDevelopment())
 {
