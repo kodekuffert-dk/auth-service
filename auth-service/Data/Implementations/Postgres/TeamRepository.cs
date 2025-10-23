@@ -54,7 +54,7 @@ public class TeamRepository(IDbConnection db) : ITeamRepository
             "FROM whitelist " +
             "INNER JOIN teams ON teams.id = whitelist.team_id";
 
-        var rows = await _db.QueryAsync<(Guid TeamId, string TeamName, Guid Id, string Email, string Status)>(sql);
+        var rows = await _db.QueryAsync<(Guid TeamId, string TeamName, Guid Id, string Email, int Status)>(sql);
 
         var entries = rows
             .GroupBy(r => (r.TeamId, r.TeamName))

@@ -15,12 +15,12 @@ namespace auth_service.Controllers
 
         // POST: whitelist
         [HttpPost]
-        public async Task<IActionResult> AddWhitelistEntries([FromBody] WhitelistEntriesDto dto)
+        public async Task<IActionResult> AddWhitelistEntries([FromBody] CreateWhitelistEntriesDto dto)
         {
             if (dto.Emails == null || dto.Emails.Count == 0 || string.IsNullOrWhiteSpace(dto.TeamName))
                 return BadRequest("Emails and TeamName are required.");
 
-            int createdCount = await _teamRepository.AddEmailsAsync(dto.TeamName, dto.Emails.Select(e => e.Email));
+            int createdCount = await _teamRepository.AddEmailsAsync(dto.TeamName, dto.Emails);
 
             return Ok($"{createdCount} emails added to whitelist for team '{dto.TeamName}'");
         }
@@ -39,7 +39,7 @@ namespace auth_service.Controllers
                 };
                 foreach (var entry in team.Emails)
                 {
-                    whitelist.Emails.Add(new WhitelistEmailDto { Email = entry.Email, Status = entry.Status });
+                    whitelist.Emails.Add(new WhitelistEmailDto(entry.Email, Enum.GetName(typeof(WhitelistStatus), entry.Status) ?? "Unknown"));
                 }
                 result.Add(whitelist);
             }
@@ -56,7 +56,7 @@ namespace auth_service.Controllers
                 deletedCount += await _teamRepository.DeleteAsync(email);
             }
 
-            return Ok($"{deletedCount} studienumre slettet fra whitelist");
+            return Ok($"{deletedCount} emails deleted from whitelist");
         }
 
         public class WhitelistEntriesDto
@@ -65,14 +65,27 @@ namespace auth_service.Controllers
             public List<WhitelistEmailDto> Emails { get; set; } = [];
         }
 
-        public class WhitelistEmailDto
+        public class WhitelistEmailDto(string email, string status)
         {
-            public string Email { get; set; } = string.Empty;
-            public string Status { get; set; } = string.Empty;
+            public string Email { get; } = email;
+            public string Status { get; } = status;
         }
 
         public class DeleteWhitelistEntriesDto
         {
+            public List<string> Emails { get; set; } = [];
+        }
+
+        public enum WhitelistStatus
+        {
+            Pending = 0,
+            Approved = 1,
+            Rejected = 2
+        }
+
+        public class CreateWhitelistEntriesDto
+        {
+            public string TeamName { get; set; } = string.Empty;
             public List<string> Emails { get; set; } = [];
         }
     }

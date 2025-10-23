@@ -4,6 +4,6 @@ public class WhitelistedEmail
 {
     public Guid Id { get; set; }
     public string Email { get; set; } = string.Empty;
-    public string Status { get; set; } = "Pending";
+    public int Status { get; set; }
     public DateTime CreatedAt { get; set; }
 }

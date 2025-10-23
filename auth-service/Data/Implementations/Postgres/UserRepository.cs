@@ -30,8 +30,8 @@ public class UserRepository : IUserRepository
 
     public async Task<Guid> CreateAsync(User user)
     {
-        var sql = @"INSERT INTO users (email, passwordhash, role, isemailconfirmed, emailconfirmationtoken, createdat)
-                    VALUES (@Email, @PasswordHash, @Role, @IsEmailConfirmed, @EmailConfirmationToken, @CreatedAt)
+        var sql = @"INSERT INTO users (email, passwordhash, role, isemailconfirmed, emailconfirmationtoken)
+                    VALUES (@Email, @PasswordHash, @Role, @IsEmailConfirmed, @EmailConfirmationToken)
                     RETURNING id;";
         var id = await _db.ExecuteScalarAsync<Guid>(sql, user);
         return id;
