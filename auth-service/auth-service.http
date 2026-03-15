@@ -1,0 +1,73 @@
+@baseUrl = http://localhost:5000
+@token = 
+
+### Health Check
+GET {{baseUrl}}/health
+
+### Create User (Register)
+POST {{baseUrl}}/user
+Content-Type: application/json
+
+{
+  "email": "student@example.com",
+  "password": "SecurePassword123!"
+}
+
+### Login
+# @name login
+POST {{baseUrl}}/login
+Content-Type: application/json
+
+{
+  "email": "student@example.com",
+  "password": "SecurePassword123!"
+}
+
+### Get Current User (requires authentication)
+GET {{baseUrl}}/user/me
+Authorization: Bearer {{token}}
+
+### Update Current User Password (requires authentication)
+PATCH {{baseUrl}}/user/me
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "password": "NewSecurePassword123!"
+}
+
+### Get Whitelist (requires Administrator role)
+GET {{baseUrl}}/whitelist
+Authorization: Bearer {{token}}
+
+### Add Emails to Whitelist (requires Administrator role)
+POST {{baseUrl}}/whitelist
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "teamName": "Team Alpha",
+  "emails": [
+    "student1@example.com",
+    "student2@example.com",
+    "student3@example.com"
+  ]
+}
+
+### Delete Emails from Whitelist (requires Administrator role)
+DELETE {{baseUrl}}/whitelist
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "emails": [
+    "student1@example.com"
+  ]
+}
+
+###
+# NOTES:
+# 1. Replace {{token}} with actual JWT token from login response
+# 2. Ensure the email is whitelisted before creating a user
+# 3. Administrator endpoints require a user with "Administrator" role
+# 4. The service runs on port 8080 by default (as per Dockerfile)
