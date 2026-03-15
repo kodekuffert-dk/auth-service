@@ -1,10 +1,10 @@
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
-using System.Data;
-using Npgsql;
 using auth_service.Data;
 using auth_service.Data.Implementations.Postgres;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using Npgsql;
+using System.Data;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,6 +12,15 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+// Health checks
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+if (string.IsNullOrWhiteSpace(connectionString) || connectionString == "CHANGE_THIS_IN_PRODUCTION")
+{
+    connectionString = "Host=auth-db;Port=5432;Database=authdb;Username=authuser;Password=authpassword";
+}
+builder.Services.AddHealthChecks()
+    .AddNpgSql(connectionString, name: "database", timeout: TimeSpan.FromSeconds(3));
 
 // JWT authentication
 var jwtKey = builder.Configuration["Jwt:Key"] ?? "this_wont_work";
@@ -95,6 +104,7 @@ if (app.Environment.IsDevelopment())
 app.UseAuthentication();
 app.UseAuthorization();
 
+app.MapHealthChecks("/health");
 app.MapControllers();
 
 app.Run();
