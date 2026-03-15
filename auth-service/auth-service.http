@@ -1,49 +1,60 @@
 @baseUrl = http://localhost:5000
-@token = 
+@clientId = example-client
+@secret = CHANGE_THIS_SECRET_IN_PRODUCTION
 
-### Health Check
+### Health Check (No signature required)
 GET {{baseUrl}}/health
 
-### Create User (Register)
-POST {{baseUrl}}/user
-Content-Type: application/json
+###
+# NOTES FOR SIGNATURE AUTHENTICATION:
+# All endpoints (except /health) require these headers:
+# - X-Client-Id: Your client identifier
+# - X-Timestamp: Current Unix timestamp (seconds)
+# - X-Signature: HMAC-SHA256 signature
+#
+# Signature calculation:
+# dataToSign = METHOD + "\n" + PATH + "\n" + TIMESTAMP + "\n" + BODY
+# signature = Base64(HMACSHA256(dataToSign, secret))
+#
+# Use the PowerShell script below to generate signatures, or use the helper script.
+###
 
-{
-  "email": "student@example.com",
-  "password": "SecurePassword123!"
-}
+### Create User (Register)
+# Generate signature using PowerShell:
+# $timestamp = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds(); $body = '{"email":"student@example.com","password":"SecurePassword123!"}'; $data = "POST`n/User`n$timestamp`n$body"; $hmac = [Security.Cryptography.HMACSHA256]::new([Text.Encoding]::UTF8.GetBytes("CHANGE_THIS_SECRET_IN_PRODUCTION")); $signature = [Convert]::ToBase64String($hmac.ComputeHash([Text.Encoding]::UTF8.GetBytes($data))); Write-Host "X-Timestamp: $timestamp"; Write-Host "X-Signature: $signature"
+POST {{baseUrl}}/User
+Content-Type: application/json
+X-Client-Id: {{clientId}}
+X-Timestamp: 1773582099
+X-Signature: Iom2dOrH+Kjn7a1maSOsRZKYHfbfFfRzdLrWpxkInic=
+{"email":"student@example.com","password":"SecurePassword123!"}
 
 ### Login
-# @name login
+# Generate signature using PowerShell:
+# $timestamp = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds(); $body = '{"email":"student@example.com","password":"SecurePassword123!"}'; $data = "POST`n/login`n$timestamp`n$body"; $hmac = [Security.Cryptography.HMACSHA256]::new([Text.Encoding]::UTF8.GetBytes("CHANGE_THIS_SECRET_IN_PRODUCTION")); $signature = [Convert]::ToBase64String($hmac.ComputeHash([Text.Encoding]::UTF8.GetBytes($data))); Write-Host "X-Timestamp: $timestamp"; Write-Host "X-Signature: $signature"
 POST {{baseUrl}}/login
 Content-Type: application/json
+X-Client-Id: {{clientId}}
+X-Timestamp: 1773582388
+X-Signature: 0VPCCR6ySD0hh5NrNCd0yL/IN0m6U81is79tHse8rVM=
+{"email":"student@example.com","password":"SecurePassword123!"}
 
-{
-  "email": "student@example.com",
-  "password": "SecurePassword123!"
-}
-
-### Get Current User (requires authentication)
-GET {{baseUrl}}/user/me
-Authorization: Bearer {{token}}
-
-### Update Current User Password (requires authentication)
-PATCH {{baseUrl}}/user/me
-Content-Type: application/json
-Authorization: Bearer {{token}}
-
-{
-  "password": "NewSecurePassword123!"
-}
-
-### Get Whitelist (requires Administrator role)
+### Get Whitelist
+# Generate signature using PowerShell:
+# $timestamp = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds(); $data = "GET`n/whitelist`n$timestamp`n"; $hmac = [Security.Cryptography.HMACSHA256]::new([Text.Encoding]::UTF8.GetBytes("CHANGE_THIS_SECRET_IN_PRODUCTION")); $signature = [Convert]::ToBase64String($hmac.ComputeHash([Text.Encoding]::UTF8.GetBytes($data))); Write-Host "X-Timestamp: $timestamp"; Write-Host "X-Signature: $signature"
 GET {{baseUrl}}/whitelist
-Authorization: Bearer {{token}}
+X-Client-Id: {{clientId}}
+X-Timestamp: 1704067200
+X-Signature: REPLACE_WITH_GENERATED_SIGNATURE
 
-### Add Emails to Whitelist (requires Administrator role)
+### Add Emails to Whitelist
+# Generate signature using PowerShell:
+# $timestamp = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds(); $body = '{"teamName":"Team Alpha","emails":["student1@example.com","student2@example.com","student3@example.com"]}'; $data = "POST`n/whitelist`n$timestamp`n$body"; $hmac = [Security.Cryptography.HMACSHA256]::new([Text.Encoding]::UTF8.GetBytes("CHANGE_THIS_SECRET_IN_PRODUCTION")); $signature = [Convert]::ToBase64String($hmac.ComputeHash([Text.Encoding]::UTF8.GetBytes($data))); Write-Host "X-Timestamp: $timestamp"; Write-Host "X-Signature: $signature"
 POST {{baseUrl}}/whitelist
 Content-Type: application/json
-Authorization: Bearer {{token}}
+X-Client-Id: {{clientId}}
+X-Timestamp: 1704067200
+X-Signature: REPLACE_WITH_GENERATED_SIGNATURE
 
 {
   "teamName": "Team Alpha",
@@ -54,20 +65,24 @@ Authorization: Bearer {{token}}
   ]
 }
 
-### Delete Emails from Whitelist (requires Administrator role)
+### Delete Emails from Whitelist
+# Generate signature using PowerShell:
+# $timestamp = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds(); $body = '{"emails":["student1@example.com"]}'; $data = "DELETE`n/whitelist`n$timestamp`n$body"; $hmac = [Security.Cryptography.HMACSHA256]::new([Text.Encoding]::UTF8.GetBytes("CHANGE_THIS_SECRET_IN_PRODUCTION")); $signature = [Convert]::ToBase64String($hmac.ComputeHash([Text.Encoding]::UTF8.GetBytes($data))); Write-Host "X-Timestamp: $timestamp"; Write-Host "X-Signature: $signature"
 DELETE {{baseUrl}}/whitelist
 Content-Type: application/json
-Authorization: Bearer {{token}}
-
-{
-  "emails": [
-    "student1@example.com"
-  ]
-}
+X-Client-Id: {{clientId}}
+X-Timestamp: REPLACE_WITH_TIMESTAMP
+X-Signature: REPLACE_WITH_SIGNATURE
+{"emails":["student1@example.com"]}
 
 ###
-# NOTES:
-# 1. Replace {{token}} with actual JWT token from login response
-# 2. Ensure the email is whitelisted before creating a user
-# 3. Administrator endpoints require a user with "Administrator" role
-# 4. The service runs on port 8080 by default (as per Dockerfile)
+# TESTING NOTES:
+# 1. Run the PowerShell command above each request to generate current timestamp and signature
+# 2. Replace X-Timestamp and X-Signature values with the generated ones
+# 3. The signature expires after 5 minutes (replay attack prevention)
+# 4. Ensure client ID and secret match what's in appsettings.json (ClientSecrets section)
+# 5. Body must match EXACTLY (including whitespace) when calculating signature
+#    - Bodies are now compact (no formatting) to match the PowerShell commands
+#    - DO NOT add spaces or newlines to the JSON body!
+# 
+# TIP: For easier testing, use .\scripts\Generate-Signature.ps1 or .\scripts\Test-AuthService.ps1

@@ -14,5 +14,9 @@
       <DependentUpon>docker-compose.yml</DependentUpon>
     </None>
     <None Include="docker-compose.yml" />
+    <None Include="scripts\Generate-Signature.ps1" />
+    <None Include="scripts\README.md" />
+    <None Include="scripts\Test-AuthService.ps1" />
+    <None Include="SIGNATURE_AUTH.md" />
   </ItemGroup>
 </Project>
