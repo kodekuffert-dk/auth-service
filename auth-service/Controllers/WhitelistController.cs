@@ -8,7 +8,6 @@ namespace auth_service.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    [Authorize(Roles = "Administrator")]
     public class WhitelistController(ITeamRepository teamRepository) : ControllerBase
     {
         private readonly ITeamRepository _teamRepository = teamRepository;

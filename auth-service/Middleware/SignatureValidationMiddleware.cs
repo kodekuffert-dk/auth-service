@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Primitives;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 
 namespace auth_service.Middleware;
 
@@ -71,8 +72,19 @@ public class SignatureValidationMiddleware
 
         // Read request body
         context.Request.EnableBuffering();
-        var bodyStream = new StreamReader(context.Request.Body);
-        var bodyContent = await bodyStream.ReadToEndAsync();
+        var json = await new StreamReader(context.Request.Body).ReadToEndAsync();
+        string bodyContent;
+
+        if (string.IsNullOrWhiteSpace(json))
+        {
+            bodyContent = string.Empty;
+        }
+        else
+        {
+            var obj = JsonSerializer.Deserialize<object>(json);
+            bodyContent = JsonSerializer.Serialize(obj);
+        }
+
         context.Request.Body.Position = 0; // Reset stream position for next middleware
 
         // Calculate expected signature

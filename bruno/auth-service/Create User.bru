@@ -1,0 +1,67 @@
+meta {
+  name: Create User
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/User
+  body: json
+  auth: none
+}
+
+headers {
+  X-Client-Id: {{clientId}}
+  X-Timestamp: {{timestamp}}
+  X-Signature: {{signature}}
+}
+
+body:json {
+  {
+    "email": "student@example.com",
+    "password": "SecurePassword123!"
+  }
+}
+
+script:pre-request {
+  const CryptoJS = require('crypto-js');
+  
+  const method = req.getMethod();
+  const fullUrl = bru.interpolate(req.getUrl());
+  const baseUrl = bru.getEnvVar('baseUrl').replace(/\/$/, '');
+  
+  // Fjern baseUrl fra starten af URL'en
+  let path = fullUrl.replace(baseUrl, '');
+  if (!path.startsWith('/')) {
+    path = '/' + path;
+  }
+  
+  console.log('path: ', fullUrl)
+  console.log('baseUrl: ', baseUrl)
+  
+  const timestamp = Math.floor(Date.now() / 1000).toString();
+  
+  // Get body - compact JSON (no formatting)
+  const body = JSON.stringify(req.getBody());
+  
+  // Calculate signature using CryptoJS (Bruno's built-in library)
+  const dataToSign = `${method}\n${path}\n${timestamp}\n${body}`;
+  const hash = CryptoJS.HmacSHA256(dataToSign, bru.getEnvVar('secret'));
+  const signature = CryptoJS.enc.Base64.stringify(hash);
+  
+  // Set variables
+  bru.setVar('timestamp', timestamp);
+  bru.setVar('signature', signature);
+  
+  // console.log('Signing data:', dataToSign);
+  // console.log('Timestamp:', timestamp);
+  // console.log('Signature:', signature);
+}
+
+docs {
+  # Create User
+  
+  Creates a new user. Email must be on the whitelist.
+  
+  The pre-request script automatically calculates the signature.
+}
