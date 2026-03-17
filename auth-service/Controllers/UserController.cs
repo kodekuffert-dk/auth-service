@@ -1,6 +1,7 @@
 ﻿using auth_service.Data;
 using auth_service.Data.Models;
 using auth_service.Services;
+using auth_service.Services.Implementations;
 using BCrypt.Net;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -9,11 +10,12 @@ using System.Threading.Tasks;
 namespace auth_service.Controllers;
 [Route("[controller]")]
 [ApiController]
-public class UserController(IUserRepository userRepository, ITeamRepository whitelistRepository, AuthService authService) : ControllerBase
+public class UserController(IUserRepository userRepository, ITeamRepository whitelistRepository, IAuthService authService, IEmailService emailService) : ControllerBase
 {
     private readonly IUserRepository _userRepository = userRepository;
     private readonly ITeamRepository _whitelistRepository = whitelistRepository;
-    private readonly AuthService _authService = authService;
+    private readonly IAuthService _authService = authService;
+    private readonly IEmailService _emailService = emailService;
 
     [HttpPost]
     public async Task<IActionResult> CreateUser([FromBody] CreateUserDto userDto)
@@ -24,7 +26,7 @@ public class UserController(IUserRepository userRepository, ITeamRepository whit
         {
             return BadRequest($"Email ({userDto.Email}) is not whitelisted");
         }
-        // TODO: create a new user in the database.
+
         User user = new()
         {
             Email = userDto.Email,
@@ -34,7 +36,14 @@ public class UserController(IUserRepository userRepository, ITeamRepository whit
         };
         var userId = await _userRepository.CreateAsync(user);
 
-        // TODO: Something has to handle sending emails...
+        try
+        {
+            await _emailService.SendEmailConfirmationAsync(user.Email, user.EmailConfirmationToken);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "User created but failed to send confirmation email. Please contact support." });
+        }
 
         return Ok(new { message="User created successfully. Continue by confirming email."});
     }

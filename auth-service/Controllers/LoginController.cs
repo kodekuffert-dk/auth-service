@@ -10,10 +10,10 @@ namespace auth_service.Controllers;
 
 [ApiController]
 [Route("[controller]")]
-public class LoginController(IUserRepository userRepository, AuthService authService) : ControllerBase
+public class LoginController(IUserRepository userRepository, IAuthService authService) : ControllerBase
 {
     private readonly IUserRepository _userRepository = userRepository;
-    private readonly AuthService _authService = authService;
+    private readonly IAuthService _authService = authService;
 
     // POST: login
     [HttpPost()]
