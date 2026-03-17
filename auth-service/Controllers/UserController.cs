@@ -36,7 +36,7 @@ public class UserController(IUserRepository userRepository, ITeamRepository whit
 
         // TODO: Something has to handle sending emails...
 
-        return Created($"User/{userId}", user);
+        return Ok(new { message="User created successfully. Continue by confirming email."});
     }
 
     [HttpPatch("me")]
