@@ -1,6 +1,8 @@
 using auth_service.Data;
 using auth_service.Data.Implementations.Postgres;
 using auth_service.Middleware;
+using auth_service.Services;
+using auth_service.Services.Implementations;
 using Npgsql;
 using System.Data;
 
@@ -18,11 +20,9 @@ if (string.IsNullOrWhiteSpace(connectionString) || connectionString == "CHANGE_T
 builder.Services.AddHealthChecks()
     .AddNpgSql(connectionString, name: "database", timeout: TimeSpan.FromSeconds(3));
 
-// Dependency injection for AuthService
-builder.Services.AddSingleton<auth_service.Services.AuthService>();
-
-// Dependency injection for repositories and database connection
-builder.Services.AddSingleton<auth_service.Services.AuthService>();
+// Dependency injection for services
+builder.Services.AddSingleton<IAuthService, AuthService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
 
 // Dependency injection for repositories and database connection
 builder.Services.AddScoped<IDbConnection>(sp =>
@@ -35,13 +35,6 @@ builder.Services.AddScoped<ITeamRepository, TeamRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 
 var app = builder.Build();
-
-// Initialiser database
-//using (var scope = app.Services.CreateScope())
-//{
-//    var db = scope.ServiceProvider.GetRequiredService<IDbConnection>();
-//    DatabaseInitializer.Initialize(db);
-//}
 
 app.UseMiddleware<SignatureValidationMiddleware>();
 
