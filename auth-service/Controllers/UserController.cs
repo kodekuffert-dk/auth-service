@@ -48,16 +48,16 @@ public class UserController(IUserRepository userRepository, ITeamRepository whit
         return Ok(new { message="User created successfully. Continue by confirming email."});
     }
 
-    [HttpGet("confirm-email")]
-    public async Task<IActionResult> ConfirmEmail([FromQuery] string token, [FromQuery] string email)
+    [HttpPatch("confirm-email")]
+    public async Task<IActionResult> ConfirmEmail([FromBody] ConfirmEmailDto dto)
     {
-        if (string.IsNullOrWhiteSpace(token) || string.IsNullOrWhiteSpace(email))
+        if (string.IsNullOrWhiteSpace(dto.Token) || string.IsNullOrWhiteSpace(dto.Email))
         {
-            return BadRequest(new { message = "Invalid confirmation link. Token and email are required." });
+            return BadRequest(new { message = "Invalid confirmation request. Token and email are required." });
         }
 
         // Get user by email
-        var user = await _userRepository.GetByEmailAsync(email);
+        var user = await _userRepository.GetByEmailAsync(dto.Email);
         if (user == null)
         {
             return NotFound(new { message = "User not found." });
@@ -70,7 +70,7 @@ public class UserController(IUserRepository userRepository, ITeamRepository whit
         }
 
         // Validate the token
-        if (user.EmailConfirmationToken != token)
+        if (user.EmailConfirmationToken != dto.Token)
         {
             return BadRequest(new { message = "Invalid or expired confirmation token." });
         }
@@ -80,7 +80,13 @@ public class UserController(IUserRepository userRepository, ITeamRepository whit
         user.EmailConfirmationToken = null;
         await _userRepository.UpdateAsync(user);
 
-        return Ok(new { message = "Email confirmed successfully. You can now log in." });
+        return Ok(new { message = $"Email ({dto.Email}) confirmed successfully." });
+    }
+
+    public class ConfirmEmailDto
+    {
+        public string Email { get; set; } = string.Empty;
+        public string Token { get; set; } = string.Empty;
     }
 
     public class EditUserDto

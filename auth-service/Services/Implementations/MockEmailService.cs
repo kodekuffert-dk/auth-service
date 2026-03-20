@@ -24,7 +24,7 @@ public class MockEmailService : IEmailService
 
     public async Task SendEmailConfirmationAsync(string toEmail, string confirmationToken)
     {
-        var confirmationUrl = _configuration["Email:ConfirmationUrl"] ?? "http://localhost:5000/User/confirm-email";
+        var confirmationUrl = _configuration["Email:ConfirmationUrl"] ?? "http://localhost:3000/confirm-email";
         var confirmationLink = $"{confirmationUrl}?token={confirmationToken}&email={Uri.EscapeDataString(toEmail)}";
 
         var timestamp = DateTime.Now.ToString("yyyyMMdd-HHmmss");
@@ -59,6 +59,13 @@ CLICK HERE TO CONFIRM (copy to browser):
 ========================================
 {confirmationLink}
 
+========================================
+GATEWAY ENDPOINT INFO:
+========================================
+The link above goes to your gateway, which should call:
+  PATCH /User/confirm-email
+  Body: {{ ""email"": ""{toEmail}"", ""token"": ""{confirmationToken}"" }}
+
 ";
 
         await File.WriteAllTextAsync(filePath, emailContent);
@@ -72,8 +79,8 @@ CLICK HERE TO CONFIRM (copy to browser):
         Console.WriteLine("║          📧 MOCK EMAIL SENT - CHECK FILE                     ║");
         Console.WriteLine("╚═══════════════════════════════════════════════════════════════╝");
         Console.WriteLine($"  To: {toEmail}");
-        Console.WriteLine($"  File: mock-emails/{fileName}");
-        Console.WriteLine($"  Link: {confirmationLink}");
+        Console.WriteLine($"  Gateway Link: {confirmationLink}");
+        Console.WriteLine($"  File: auth-service/mock-emails/{fileName}");
         Console.WriteLine("═════════════════════════════════════════════════════════════════");
         Console.WriteLine("");
     }

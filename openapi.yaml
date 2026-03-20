@@ -82,30 +82,25 @@ paths:
                     example: "User created but failed to send confirmation email. Please contact support."
 
   /user/confirm-email:
-    get:
+    patch:
       tags:
         - User
       summary: Confirm email address
       description: |
         Confirms a user's email address using the token sent via email.
-        This endpoint is typically called by clicking the link in the confirmation email.
+        **This endpoint should be called by the gateway**, not directly from the client.
+
+        The user clicks a link in their email that goes to the gateway:
+        `https://gateway.com/confirm-email?token=abc123&email=user@example.com`
+
+        The gateway then calls this endpoint with the token and email in the request body.
       operationId: confirmEmail
-      parameters:
-        - name: token
-          in: query
-          required: true
-          schema:
-            type: string
-          description: Email confirmation token
-          example: "abc123def456"
-        - name: email
-          in: query
-          required: true
-          schema:
-            type: string
-            format: email
-          description: User's email address
-          example: "user@example.com"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfirmEmailDto'
       responses:
         '200':
           description: Email confirmed successfully or already confirmed
@@ -306,6 +301,22 @@ components:
           minLength: 6
           description: User's password
           example: "SecurePassword123!"
+
+    ConfirmEmailDto:
+      type: object
+      required:
+        - email
+        - token
+      properties:
+        email:
+          type: string
+          format: email
+          description: User's email address
+          example: "student@example.com"
+        token:
+          type: string
+          description: Email confirmation token
+          example: "abc123def456"
 
     LoginDto:
       type: object

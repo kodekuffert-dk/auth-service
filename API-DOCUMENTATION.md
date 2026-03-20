@@ -86,17 +86,16 @@ Opretter en ny bruger. Email skal være på whitelist.
 
 ### 3. Confirm Email
 
-Bekræfter brugerens email-adresse via token fra bekræftelses-email.
+Bekræfter brugerens email-adresse via token. **Dette endpoint skal kaldes af gateway-applikationen**, ikke direkte fra klienten.
 
-**Endpoint**: `GET /user/confirm-email`
+**Endpoint**: `PATCH /user/confirm-email`
 
-**Query Parameters**:
-- `token` (string, required) - Confirmation token
-- `email` (string, required) - User's email address
-
-**Example**:
-```
-GET /user/confirm-email?token=abc123def456&email=student@example.com
+**Request Body**:
+```json
+{
+  "email": "student@example.com",
+  "token": "abc123def456"
+}
 ```
 
 **Success Response (200)**:
@@ -115,7 +114,7 @@ GET /user/confirm-email?token=abc123def456&email=student@example.com
 
 **Error Responses**:
 
-- **400 Bad Request** - Invalid token:
+- **400 Bad Request** - Invalid token or missing fields:
 ```json
 {
   "message": "Invalid or expired confirmation token."
@@ -126,6 +125,23 @@ GET /user/confirm-email?token=abc123def456&email=student@example.com
 ```json
 {
   "message": "User not found."
+}
+```
+
+**Gateway Integration**:
+
+Bruger modtager email med link som: `https://yourgateway.com/confirm-email?token=abc123&email=user@example.com`
+
+Gateway modtager GET request og sender PATCH til auth-service:
+```http
+PATCH /user/confirm-email
+Content-Type: application/json
+X-Client-Id: gateway-client
+X-Signature: [computed-signature]
+
+{
+  "email": "student@example.com",
+  "token": "abc123def456"
 }
 ```
 
@@ -311,13 +327,28 @@ X-Signature: [computed-signature]
 }
 ```
 
-### 3️⃣ Bruger modtager email og bekræfter
+### 3️⃣ Bruger modtager email og klikker på link
 
-```http
-GET /user/confirm-email?token=abc123&email=student@example.com
+Email indeholder link til gateway:
+```
+https://yourgateway.com/confirm-email?token=abc123&email=student@example.com
 ```
 
-### 4️⃣ Bruger logger ind
+### 4️⃣ Gateway modtager request og kalder auth-service
+
+```http
+PATCH /user/confirm-email
+Content-Type: application/json
+X-Client-Id: gateway-client
+X-Signature: [computed-signature]
+
+{
+  "email": "student@example.com",
+  "token": "abc123"
+}
+```
+
+### 5️⃣ Bruger logger ind
 
 ```http
 POST /login
@@ -411,20 +442,23 @@ EMAIL_SMTP_PORT="587"
 EMAIL_SMTP_USER="noreply@example.com"
 EMAIL_SMTP_PASSWORD="password"
 EMAIL_FROM_EMAIL="noreply@example.com"
-EMAIL_CONFIRMATION_URL="https://yourapp.com/confirm-email"
+EMAIL_CONFIRMATION_URL="https://yourgateway.com/confirm-email"
 
 # Environment
 ASPNETCORE_ENVIRONMENT="Development | Production"
 ```
+
+**Vigtigt**: `EMAIL_CONFIRMATION_URL` skal pege på din **gateway**, ikke direkte på auth-service.
 
 ---
 
 ## Development Mode
 
 I udviklings-miljø:
-- ✅ Mock emails skrives til `mock-emails/` mappen
+- ✅ Mock emails skrives til `auth-service/mock-emails/` mappen
 - ✅ Ingen rigtige emails sendes
 - ✅ JWT token gælder i 6 timer
+- ✅ Gateway URL: `http://localhost:3000/confirm-email`
 - ✅ Signatur-validering kan bypasses (afhængig af middleware-konfiguration)
 
 ---

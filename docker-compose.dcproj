@@ -10,6 +10,10 @@
     <DockerServiceName>auth-service</DockerServiceName>
   </PropertyGroup>
   <ItemGroup>
+    <None Remove="dev-email-viewer\**" />
+    <None Remove="mock-emails\**" />
+  </ItemGroup>
+  <ItemGroup>
     <None Include="API-DOCUMENTATION.md" />
     <None Include="bruno\auth-service\Add Emails to Whitelist.bru" />
     <None Include="bruno\auth-service\bruno.json" />
@@ -21,21 +25,15 @@
     <None Include="bruno\auth-service\Health Check.bru" />
     <None Include="bruno\auth-service\Login.bru" />
     <None Include="bruno\auth-service\README.md" />
-    <None Include="DEV-EMAIL-VIEWER-GUIDE.md" />
-    <None Include="dev-email-viewer\.dockerignore" />
-    <None Include="dev-email-viewer\appsettings.json" />
-    <None Include="dev-email-viewer\dev-email-viewer.csproj" />
-    <None Include="dev-email-viewer\Dockerfile" />
-    <None Include="dev-email-viewer\Program.cs" />
-    <None Include="dev-email-viewer\README.md" />
     <None Include="docker-compose.override.yml">
       <DependentUpon>docker-compose.yml</DependentUpon>
     </None>
     <None Include="docker-compose.yml" />
+    <None Include="EMAIL-CONFIRMATION-UPDATE.md" />
     <None Include="FINAL-SOLUTION-SUMMARY.md" />
+    <None Include="GATEWAY-INTEGRATION.md" />
+    <None Include="MOCK-EMAIL-FIX.md" />
     <None Include="MOCK-EMAIL-GUIDE.md" />
-    <None Include="mock-emails\.gitignore" />
-    <None Include="mock-emails\README.md" />
     <None Include="openapi.yaml" />
     <None Include="scripts\Generate-Signature.ps1" />
     <None Include="scripts\README.md" />
