@@ -48,32 +48,40 @@ public class UserController(IUserRepository userRepository, ITeamRepository whit
         return Ok(new { message="User created successfully. Continue by confirming email."});
     }
 
-    [HttpPatch("me")]
-    public async Task<IActionResult> UpdateUser([FromBody] EditUserDto userDto)
+    [HttpGet("confirm-email")]
+    public async Task<IActionResult> ConfirmEmail([FromQuery] string token, [FromQuery] string email)
     {
-        // retrieve current user information from database.
-        var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.NameIdentifier);
-        if (userIdClaim == null)
+        if (string.IsNullOrWhiteSpace(token) || string.IsNullOrWhiteSpace(email))
         {
-            return Unauthorized("User ID claim not found.");
+            return BadRequest(new { message = "Invalid confirmation link. Token and email are required." });
         }
-        var userEmail = userIdClaim.Value;
 
-        // Fetch user details from the database using the email.
-        var user = await _userRepository.GetByEmailAsync(userEmail);
+        // Get user by email
+        var user = await _userRepository.GetByEmailAsync(email);
         if (user == null)
         {
-            return NotFound("User not found.");
+            return NotFound(new { message = "User not found." });
         }
 
-        user.PasswordHash = _authService.HashPassword(userDto.Password);
+        // Check if email is already confirmed
+        if (user.IsEmailConfirmed)
+        {
+            return Ok(new { message = "Email is already confirmed." });
+        }
 
+        // Validate the token
+        if (user.EmailConfirmationToken != token)
+        {
+            return BadRequest(new { message = "Invalid or expired confirmation token." });
+        }
+
+        // Mark email as confirmed and clear the token
+        user.IsEmailConfirmed = true;
+        user.EmailConfirmationToken = null;
         await _userRepository.UpdateAsync(user);
 
-        return Ok();
+        return Ok(new { message = "Email confirmed successfully. You can now log in." });
     }
-
-
 
     public class EditUserDto
     {

@@ -22,7 +22,16 @@ builder.Services.AddHealthChecks()
 
 // Dependency injection for services
 builder.Services.AddSingleton<IAuthService, AuthService>();
-builder.Services.AddScoped<IEmailService, EmailService>();
+
+// Email service: Use mock in Development, real service in Production
+if (builder.Environment.IsDevelopment())
+{
+    builder.Services.AddScoped<IEmailService, MockEmailService>();
+}
+else
+{
+    builder.Services.AddScoped<IEmailService, EmailService>();
+}
 
 // Dependency injection for repositories and database connection
 builder.Services.AddScoped<IDbConnection>(sp =>
