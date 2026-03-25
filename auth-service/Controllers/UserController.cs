@@ -27,11 +27,12 @@ public class UserController(IUserRepository userRepository, ITeamRepository whit
             return BadRequest($"Email ({userDto.Email}) is not whitelisted");
         }
 
+        // Students must be whitelisted - always set role to student
         User user = new()
         {
             Email = userDto.Email,
-            Role = "Student", // default role
-            PasswordHash = _authService.HashPassword(userDto.Password), // hash the password properly
+            Role = UserRole.Student,
+            PasswordHash = _authService.HashPassword(userDto.Password),
             EmailConfirmationToken = _authService.GenerateToken(),
         };
         var userId = await _userRepository.CreateAsync(user);
@@ -46,6 +47,56 @@ public class UserController(IUserRepository userRepository, ITeamRepository whit
         }
 
         return Ok(new { message="User created successfully. Continue by confirming email."});
+    }
+
+    [HttpPost("privileged")]
+    public async Task<IActionResult> CreatePrivilegedUser([FromBody] CreatePrivilegedUserDto userDto)
+    {
+        // Validate role
+        if (string.IsNullOrWhiteSpace(userDto.Role))
+        {
+            return BadRequest("Role is required for privileged users.");
+        }
+
+        if (!UserRole.IsValid(userDto.Role))
+        {
+            return BadRequest($"Invalid role. Valid roles are: {string.Join(", ", UserRole.AllRoles)}");
+        }
+
+        var role = userDto.Role.ToLower();
+
+        // Only allow creating teachers and admins through this endpoint
+        if (role == UserRole.Student)
+        {
+            return BadRequest("Students must be created through the regular user creation endpoint.");
+        }
+
+        // Check if user already exists
+        var existingUser = await _userRepository.GetByEmailAsync(userDto.Email);
+        if (existingUser != null)
+        {
+            return BadRequest($"User with email ({userDto.Email}) already exists.");
+        }
+
+        User user = new()
+        {
+            Email = userDto.Email,
+            Role = role,
+            PasswordHash = _authService.HashPassword(userDto.Password),
+            EmailConfirmationToken = _authService.GenerateToken(),
+        };
+        var userId = await _userRepository.CreateAsync(user);
+
+        try
+        {
+            await _emailService.SendEmailConfirmationAsync(user.Email, user.EmailConfirmationToken);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "User created but failed to send confirmation email. Please contact support." });
+        }
+
+        return Ok(new { message = $"{role} user created successfully. Continue by confirming email." });
     }
 
     [HttpPatch("confirm-email")]
@@ -98,5 +149,12 @@ public class UserController(IUserRepository userRepository, ITeamRepository whit
     {
         public string Email { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
+    }
+
+    public class CreatePrivilegedUserDto
+    {
+        public string Email { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
+        public string Role { get; set; } = string.Empty;
     }
 }
