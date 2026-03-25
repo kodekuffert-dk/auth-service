@@ -4,7 +4,9 @@
       "commandName": "DockerCompose",
       "commandVersion": "1.0",
       "serviceActions": {
-        "auth-service": "StartDebugging"
+        "auth-db": "StartWithoutDebugging",
+        "auth-service": "StartDebugging",
+        "migrator": "StartDebugging"
       }
     }
   }

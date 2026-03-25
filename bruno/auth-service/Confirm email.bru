@@ -1,13 +1,13 @@
 meta {
-  name: Login
+  name: Confirm email
   type: http
-  seq: 3
+  seq: 7
 }
 
-post {
-  url: {{baseUrl}}/login
+patch {
+  url: http://localhost:5000/user/confirm-emai
   body: json
-  auth: none
+  auth: inherit
 }
 
 headers {
@@ -18,8 +18,8 @@ headers {
 
 body:json {
   {
-    "email": "student1@example.com",
-    "password": "SecurePassword123!"
+    "token": "1bQzAYBY/3J1j7xKLuS6XaMzw6Z8Z50Ty511MWE4koE=",
+    "email": "student1@example.com"  
   }
 }
 
@@ -58,10 +58,7 @@ script:pre-request {
   // console.log('Signature:', signature);
 }
 
-docs {
-  # Login
-  
-  Authenticates a user and returns a JWT token.
-  
-  The pre-request script automatically calculates the signature.
+settings {
+  encodeUrl: true
+  timeout: 0
 }

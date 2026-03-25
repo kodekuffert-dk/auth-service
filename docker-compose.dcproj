@@ -10,6 +10,11 @@
     <DockerServiceName>auth-service</DockerServiceName>
   </PropertyGroup>
   <ItemGroup>
+    <None Remove="dev-email-viewer\**" />
+    <None Remove="mock-emails\**" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="API-DOCUMENTATION.md" />
     <None Include="bruno\auth-service\Add Emails to Whitelist.bru" />
     <None Include="bruno\auth-service\bruno.json" />
     <None Include="bruno\auth-service\Create User.bru" />
@@ -24,6 +29,12 @@
       <DependentUpon>docker-compose.yml</DependentUpon>
     </None>
     <None Include="docker-compose.yml" />
+    <None Include="EMAIL-CONFIRMATION-UPDATE.md" />
+    <None Include="FINAL-SOLUTION-SUMMARY.md" />
+    <None Include="GATEWAY-INTEGRATION.md" />
+    <None Include="MOCK-EMAIL-FIX.md" />
+    <None Include="MOCK-EMAIL-GUIDE.md" />
+    <None Include="openapi.yaml" />
     <None Include="scripts\Generate-Signature.ps1" />
     <None Include="scripts\README.md" />
     <None Include="scripts\Test-AuthService.ps1" />

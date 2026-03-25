@@ -40,6 +40,8 @@ services:
       - auth-db
     networks:
       - auth-network
+    volumes:
+      - ./auth-service/mock-emails:/app/mock-emails
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8080/health || exit 1"]
       interval: 10s

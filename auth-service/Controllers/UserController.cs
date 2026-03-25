@@ -1,6 +1,7 @@
 ﻿using auth_service.Data;
 using auth_service.Data.Models;
 using auth_service.Services;
+using auth_service.Services.Implementations;
 using BCrypt.Net;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -9,11 +10,12 @@ using System.Threading.Tasks;
 namespace auth_service.Controllers;
 [Route("[controller]")]
 [ApiController]
-public class UserController(IUserRepository userRepository, ITeamRepository whitelistRepository, AuthService authService) : ControllerBase
+public class UserController(IUserRepository userRepository, ITeamRepository whitelistRepository, IAuthService authService, IEmailService emailService) : ControllerBase
 {
     private readonly IUserRepository _userRepository = userRepository;
     private readonly ITeamRepository _whitelistRepository = whitelistRepository;
-    private readonly AuthService _authService = authService;
+    private readonly IAuthService _authService = authService;
+    private readonly IEmailService _emailService = emailService;
 
     [HttpPost]
     public async Task<IActionResult> CreateUser([FromBody] CreateUserDto userDto)
@@ -24,7 +26,7 @@ public class UserController(IUserRepository userRepository, ITeamRepository whit
         {
             return BadRequest($"Email ({userDto.Email}) is not whitelisted");
         }
-        // TODO: create a new user in the database.
+
         User user = new()
         {
             Email = userDto.Email,
@@ -34,37 +36,58 @@ public class UserController(IUserRepository userRepository, ITeamRepository whit
         };
         var userId = await _userRepository.CreateAsync(user);
 
-        // TODO: Something has to handle sending emails...
+        try
+        {
+            await _emailService.SendEmailConfirmationAsync(user.Email, user.EmailConfirmationToken);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "User created but failed to send confirmation email. Please contact support." });
+        }
 
-        return Created($"User/{userId}", user);
+        return Ok(new { message="User created successfully. Continue by confirming email."});
     }
 
-    [HttpPatch("me")]
-    public async Task<IActionResult> UpdateUser([FromBody] EditUserDto userDto)
+    [HttpPatch("confirm-email")]
+    public async Task<IActionResult> ConfirmEmail([FromBody] ConfirmEmailDto dto)
     {
-        // retrieve current user information from database.
-        var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.NameIdentifier);
-        if (userIdClaim == null)
+        if (string.IsNullOrWhiteSpace(dto.Token) || string.IsNullOrWhiteSpace(dto.Email))
         {
-            return Unauthorized("User ID claim not found.");
+            return BadRequest(new { message = "Invalid confirmation request. Token and email are required." });
         }
-        var userEmail = userIdClaim.Value;
 
-        // Fetch user details from the database using the email.
-        var user = await _userRepository.GetByEmailAsync(userEmail);
+        // Get user by email
+        var user = await _userRepository.GetByEmailAsync(dto.Email);
         if (user == null)
         {
-            return NotFound("User not found.");
+            return NotFound(new { message = "User not found." });
         }
 
-        user.PasswordHash = _authService.HashPassword(userDto.Password);
+        // Check if email is already confirmed
+        if (user.IsEmailConfirmed)
+        {
+            return Ok(new { message = "Email is already confirmed." });
+        }
 
+        // Validate the token
+        if (user.EmailConfirmationToken != dto.Token)
+        {
+            return BadRequest(new { message = "Invalid or expired confirmation token." });
+        }
+
+        // Mark email as confirmed and clear the token
+        user.IsEmailConfirmed = true;
+        user.EmailConfirmationToken = null;
         await _userRepository.UpdateAsync(user);
 
-        return Ok();
+        return Ok(new { message = $"Email ({dto.Email}) confirmed successfully." });
     }
 
-
+    public class ConfirmEmailDto
+    {
+        public string Email { get; set; } = string.Empty;
+        public string Token { get; set; } = string.Empty;
+    }
 
     public class EditUserDto
     {

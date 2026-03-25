@@ -2,9 +2,9 @@ using System.Security.Cryptography;
 using System.Text;
 using BCrypt.Net;
 
-namespace auth_service.Services;
+namespace auth_service.Services.Implementations;
 
-public class AuthService
+public class AuthService : IAuthService
 {
     // Hash et password med BCrypt
     public string HashPassword(string password)
